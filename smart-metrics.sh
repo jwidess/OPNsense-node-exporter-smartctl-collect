@@ -6,6 +6,9 @@
 # The os-smart plugin MUST be installed for this to work.
 # https://github.com/jwidess/OPNsense-node-exporter-smartctl-collect
 
+# Drive to monitor
+export DEVICE="/dev/nvme0"
+
 # Target file for Node Exporter to read
 # The os-node_exporter plugin by default uses /var/tmp/node_exporter for textfile metrics
 TEXTFILE_DIR="/var/tmp/node_exporter"
@@ -13,62 +16,53 @@ OUT_FILE="$TEXTFILE_DIR/smart_metrics.prom"
 
 mkdir -p "$TEXTFILE_DIR"
 
-# Capture smartctl output
-SMART_DATA=$(/usr/local/sbin/smartctl -a /dev/nvme0)
+#OPNsense by default ships with Python 3 at /usr/local/bin/python3
+/usr/local/sbin/smartctl -j -a "$DEVICE" | /usr/local/bin/python3 -c '
+import sys, json, os
 
-# Extract values from smartctl output
-CRITICAL_HEX=$(echo "$SMART_DATA" | grep "Critical Warning:" | awk '{print $3}')
-CRITICAL=$(printf "%d" "$CRITICAL_HEX")
-TEMP=$(echo "$SMART_DATA" | grep "Temperature:" | awk '{print $2}')
-SPARE=$(echo "$SMART_DATA" | grep "Available Spare:" | awk '{print $3}' | tr -d '%')
-USED=$(echo "$SMART_DATA" | grep "Percentage Used:" | awk '{print $3}' | tr -d '%')
-READ=$(echo "$SMART_DATA" | grep "Data Units Read" | awk '{print $4}' | tr -d ',')
-WRITTEN=$(echo "$SMART_DATA" | grep "Data Units Written" | awk '{print $4}' | tr -d ',')
-BUSY=$(echo "$SMART_DATA" | grep "Controller Busy Time" | awk '{print $4}' | tr -d ',')
-CYCLES=$(echo "$SMART_DATA" | grep "Power Cycles" | awk '{print $3}' | tr -d ',')
-HOURS=$(echo "$SMART_DATA" | grep "Power On Hours" | awk '{print $4}' | tr -d ',')
-UNSAFE=$(echo "$SMART_DATA" | grep "Unsafe Shutdowns" | awk '{print $3}' | tr -d ',')
-MEDIA_ERRORS=$(echo "$SMART_DATA" | grep "Media and Data Integrity Errors" | awk '{print $6}' | tr -d ',')
-ERROR_LOG=$(echo "$SMART_DATA" | grep "Error Information Log Entries" | awk '{print $5}' | tr -d ',')
+device_path = os.environ.get("DEVICE", "/dev/nvme0")
+device_name = os.path.basename(device_path)
 
-# Output to Prometheus format
-cat << EOF > "$OUT_FILE.tmp"
-# HELP node_disk_smart_critical_warning Critical warning state (0 is good).
-# TYPE node_disk_smart_critical_warning gauge
-node_disk_smart_critical_warning{device="nvme0"} $CRITICAL
-# HELP node_disk_smart_temperature_celsius Current drive temperature.
-# TYPE node_disk_smart_temperature_celsius gauge
-node_disk_smart_temperature_celsius{device="nvme0"} $TEMP
-# HELP node_disk_smart_available_spare_percent Available spare capacity percentage.
-# TYPE node_disk_smart_available_spare_percent gauge
-node_disk_smart_available_spare_percent{device="nvme0"} $SPARE
-# HELP node_disk_smart_percentage_used_percent Percentage of drive life used.
-# TYPE node_disk_smart_percentage_used_percent gauge
-node_disk_smart_percentage_used_percent{device="nvme0"} $USED
-# HELP node_disk_smart_data_units_read_total Total data units read.
-# TYPE node_disk_smart_data_units_read_total counter
-node_disk_smart_data_units_read_total{device="nvme0"} $READ
-# HELP node_disk_smart_data_units_written_total Total data units written.
-# TYPE node_disk_smart_data_units_written_total counter
-node_disk_smart_data_units_written_total{device="nvme0"} $WRITTEN
-# HELP node_disk_smart_controller_busy_time_minutes_total Controller busy time in minutes.
-# TYPE node_disk_smart_controller_busy_time_minutes_total counter
-node_disk_smart_controller_busy_time_minutes_total{device="nvme0"} $BUSY
-# HELP node_disk_smart_power_cycles_total Total power cycles.
-# TYPE node_disk_smart_power_cycles_total counter
-node_disk_smart_power_cycles_total{device="nvme0"} $CYCLES
-# HELP node_disk_smart_power_on_hours_total Total power on hours.
-# TYPE node_disk_smart_power_on_hours_total counter
-node_disk_smart_power_on_hours_total{device="nvme0"} $HOURS
-# HELP node_disk_smart_unsafe_shutdowns_total Total unsafe shutdowns.
-# TYPE node_disk_smart_unsafe_shutdowns_total counter
-node_disk_smart_unsafe_shutdowns_total{device="nvme0"} $UNSAFE
-# HELP node_disk_smart_media_errors_total Total media and data integrity errors.
-# TYPE node_disk_smart_media_errors_total counter
-node_disk_smart_media_errors_total{device="nvme0"} $MEDIA_ERRORS
-# HELP node_disk_smart_error_log_entries_total Total error log entries.
-# TYPE node_disk_smart_error_log_entries_total counter
-node_disk_smart_error_log_entries_total{device="nvme0"} $ERROR_LOG
-EOF
+try:
+    data = json.load(sys.stdin)
+    # NVMe devices store main stats in this object
+    smart_log = data.get("nvme_smart_health_information_log", {})
+    
+    # metrics mapping: metric_name -> (value, help, type)
+    metrics = {
+        "node_disk_smart_critical_warning": (smart_log.get("critical_warning"), "Critical warning state (0 is good)", "gauge"),
+        "node_disk_smart_temperature_celsius": (smart_log.get("temperature"), "Current drive temperature", "gauge"),
+        "node_disk_smart_available_spare_percent": (smart_log.get("available_spare"), "Available spare capacity percentage", "gauge"),
+        "node_disk_smart_available_spare_threshold_percent": (smart_log.get("available_spare_threshold"), "Available spare threshold percentage", "gauge"),
+        "node_disk_smart_percentage_used_percent": (smart_log.get("percentage_used"), "Percentage of drive life used", "gauge"),
+        "node_disk_smart_data_units_read_total": (smart_log.get("data_units_read"), "Total data units read (1000 units of 512 bytes)", "counter"),
+        "node_disk_smart_data_units_written_total": (smart_log.get("data_units_written"), "Total data units written (1000 units of 512 bytes)", "counter"),
+        "node_disk_smart_host_read_commands_total": (smart_log.get("host_reads"), "Total host read commands", "counter"),
+        "node_disk_smart_host_write_commands_total": (smart_log.get("host_writes"), "Total host write commands", "counter"),
+        "node_disk_smart_controller_busy_time_minutes_total": (smart_log.get("controller_busy_time"), "Controller busy time", "counter"),
+        "node_disk_smart_power_cycles_total": (smart_log.get("power_cycles"), "Total power cycles", "counter"),
+        "node_disk_smart_power_on_hours_total": (smart_log.get("power_on_hours"), "Total power on hours", "counter"),
+        "node_disk_smart_unsafe_shutdowns_total": (smart_log.get("unsafe_shutdowns"), "Total unsafe shutdowns", "counter"),
+        "node_disk_smart_media_errors_total": (smart_log.get("media_errors"), "Total media and data integrity errors", "counter"),
+        "node_disk_smart_error_log_entries_total": (smart_log.get("num_err_log_entries"), "Total error log entries", "counter"),
+    }
 
-mv "$OUT_FILE.tmp" "$OUT_FILE"
+    print(f"# Processing device: {device_path}")
+    for name, (value, help_text, metric_type) in metrics.items():
+        if value is not None:
+            print(f"# HELP {name} {help_text}")
+            print(f"# TYPE {name} {metric_type}")
+            print(f"{name}{{device=\"{device_name}\"}} {value}")
+
+except Exception as e:
+    # Output nothing on error to avoid corrupting the file
+    sys.exit(1)
+' > "$OUT_FILE.tmp"
+
+if [ $? -eq 0 ]; then
+    mv "$OUT_FILE.tmp" "$OUT_FILE"
+else
+    echo "Failed to collect SMART metrics" >&2
+    rm -f "$OUT_FILE.tmp"
+    exit 1
+fi
