@@ -1,6 +1,6 @@
 # OPNsense-node-exporter-smartctl-collect
 
-This repo contains a shell script and a `configd` action to collect SMART data from an NVMe drive and expose them to Prometheus via the Node Exporter plugin and textfile collector on an OPNsense router.
+This repo contains a shell script and a `configd` action to collect SMART data from an NVMe drive and expose it to Prometheus via the Node Exporter plugin and textfile collector on an OPNsense router.
 
 ## Grafana Dashboard
 
@@ -20,19 +20,21 @@ I've created a Grafana Dashboard for visualizing these Smartctl metrics, it can 
 
 ## Installation
 
-1.  **Copy the script**:
+1. **Install the required plugins listed above**
+
+2.  **Copy the script**:
     Upload `smart-metrics.sh` to your OPNsense device, place it in `/usr/local/bin/`, and make it executable with `chmod +x /usr/local/bin/smart-metrics.sh`
 
     *Note: The script is currently hardcoded for an NVMe drive at `/dev/nvme0`. If your drive is at a different path, edit the `DEVICE` variable in the script.*
 
-2.  **Copy the action configuration**:
+3.  **Copy the action configuration**:
     Upload `actions_smartmetrics.conf` to `/usr/local/opnsense/service/conf/actions.d/`.
 
-3.  **Reload configd**:
+4.  **Reload configd**:
     To register the new action, restart the config daemon with `service configd restart`
 
 
-## Usage & Automation
+## Usage & Cron Setup
 
 ### Manual Test
 
@@ -48,14 +50,14 @@ To collect metrics on a schedule:
 1.  Go to **System > Settings > Cron**.
 2.  Click the **+** button to add a new job.
 3.  **Command**: Select `Collect SMART Metrics for Node Exporter` from the dropdown.
-4.  **Schedule**: Set your interval, I use every 5-30 minutes.
+4.  **Schedule**: Set your interval; I use every 5 minutes. *(You'll need to update the Grafana Rate of Writes panel `interval` to match if you change this to avoid artifacts)*
 5.  Click **Save**.
 
 ## Exposed Metrics
 
 The following metrics are exported and can be found in Prometheus. I use Grafana to visualize them. Each metric includes a `device` label (e.g. `device="nvme0"`).
 
-**NOTE**: These are all metrics found under the `nvme_smart_health_information_log` key of the JSON output of smartctl. If you're having problems, run `smartctl -j -a /dev/nvme0` (or your device path) to see if your drive supports these metrics.
+**NOTE**: These are all metrics found under the `nvme_smart_health_information_log` object of the JSON output of smartctl. If you're having problems, run `smartctl -j -a /dev/nvme0` (or your device path) to see if your drive supports these metrics.
 
 * `node_disk_smart_critical_warning` — Critical warning state (0 = good).
 * `node_disk_smart_temperature_celsius` — Current drive temperature (°C).
