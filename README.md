@@ -42,13 +42,14 @@ To collect metrics on a schedule:
 1.  Go to **System > Settings > Cron**.
 2.  Click the **+** button to add a new job.
 3.  **Command**: Select `Collect SMART Metrics for Node Exporter` from the dropdown.
-4.  **Schedule**: Set your interval, I use every 30 minutes.
+4.  **Schedule**: Set your interval, I use every 5-30 minutes.
 5.  Click **Save**.
 
 ## Exposed Metrics
 
 The following metrics are exported and can be found in Prometheus. I use Grafana to visualize them. Each metric includes a `device` label (e.g. `device="nvme0"`).
-**NOTE**: These are all metrics found under the `nvme_smart_health_information_log` key the JSON output of smartctl. If you're having problems, run `smartctl -j -a /dev/nvme0` (or your device path) to see if your drive supports these metrics.
+
+**NOTE**: These are all metrics found under the `nvme_smart_health_information_log` key of the JSON output of smartctl. If you're having problems, run `smartctl -j -a /dev/nvme0` (or your device path) to see if your drive supports these metrics.
 
 * `node_disk_smart_critical_warning` — Critical warning state (0 = good).
 * `node_disk_smart_temperature_celsius` — Current drive temperature (°C).
