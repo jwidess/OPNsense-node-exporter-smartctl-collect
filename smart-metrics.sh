@@ -45,8 +45,8 @@ try:
         "node_disk_smart_unsafe_shutdowns_total": (smart_log.get("unsafe_shutdowns"), "Total unsafe shutdowns", "counter"),
         "node_disk_smart_media_errors_total": (smart_log.get("media_errors"), "Total media and data integrity errors", "counter"),
         "node_disk_smart_error_log_entries_total": (smart_log.get("num_err_log_entries"), "Total error log entries", "counter"),
-        "node_disk_smart_warning_temp_time_seconds_total": (smart_log.get("warning_temp_time"), "Time in minutes the drive has been above warning temperature", "counter"),
-        "node_disk_smart_critical_comp_time_seconds_total": (smart_log.get("critical_comp_time"), "Time in minutes the drive has been above critical temperature", "counter"),
+        "node_disk_smart_warning_temp_time_minutes_total": (smart_log.get("warning_temp_time"), "Time in minutes the drive has been above warning temperature", "counter"),
+        "node_disk_smart_critical_comp_time_minutes_total": (smart_log.get("critical_comp_time"), "Time in minutes the drive has been above critical temperature", "counter"),
     }
 
     print(f"# Processing device: {device_path}")
