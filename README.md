@@ -9,7 +9,7 @@ This repo contains a shell script and a `configd` action to collect SMART data f
 
 ## Files
 
-*   `smart-metrics.sh`: The data collection script. It runs `smartctl`, parses the output, and writes a `.prom` file to the Node Exporter textfile directory.
+*   `smart-metrics.sh`: The data collection script. It runs `smartctl`, parses the output with Python, and writes a `.prom` file to the Node Exporter textfile directory.
 *   `actions_smartmetrics.conf`: Configuration file allowing the script to be triggered via OPNsense's `configd` system (and thus the Cron scheduler).
 
 ## Installation
@@ -17,7 +17,7 @@ This repo contains a shell script and a `configd` action to collect SMART data f
 1.  **Copy the script**:
     Upload `smart-metrics.sh` to your OPNsense device, place it in `/usr/local/bin/`, and make it executable with `chmod +x /usr/local/bin/smart-metrics.sh`
 
-    *Note: The script is currently hardcoded for an NVME drive at `/dev/nvme0`*
+    *Note: The script is currently hardcoded for an NVMe drive at `/dev/nvme0`. If your drive is at a different path, edit the `DEVICE` variable in the script.*
 
 2.  **Copy the action configuration**:
     Upload `actions_smartmetrics.conf` to `/usr/local/opnsense/service/conf/actions.d/`.
@@ -47,9 +47,24 @@ To collect metrics on a schedule:
 
 ## Exposed Metrics
 
-The following metrics are exported and can be found in Prometheus. I use Grafana to visualize them.
+The following metrics are exported and can be found in Prometheus. I use Grafana to visualize them. Each metric includes a `device` label (e.g. `device="nvme0"`).
+**NOTE**: These are all metrics found under the `nvme_smart_health_information_log` key the JSON output of smartctl. If you're having problems, run `smartctl -j -a /dev/nvme0` (or your device path) to see if your drive supports these metrics.
 
-*   `node_disk_smart_data_units_written_total`: Total data units written to the NVMe drive.
-*   `node_disk_smart_power_on_hours_total`: Total power-on hours.
-*   `node_disk_smart_temperature_celsius`: Current drive temperature.
+* `node_disk_smart_critical_warning` — Critical warning state (0 = good).
+* `node_disk_smart_temperature_celsius` — Current drive temperature (°C).
+* `node_disk_smart_available_spare_percent` — Available spare capacity (%).
+* `node_disk_smart_available_spare_threshold_percent` — Available spare threshold (%).
+* `node_disk_smart_percentage_used_percent` — Percentage of drive life used (%).
+* `node_disk_smart_data_units_read_total` — Total data units read (units reported by firmware).
+* `node_disk_smart_data_units_written_total` — Total data units written (units reported by firmware).
+* `node_disk_smart_host_read_commands_total` — Total host read commands.
+* `node_disk_smart_host_write_commands_total` — Total host write commands.
+* `node_disk_smart_controller_busy_time_minutes_total` — Controller busy time (minutes).
+* `node_disk_smart_power_cycles_total` — Total power cycles.
+* `node_disk_smart_power_on_hours_total` — Total power-on hours.
+* `node_disk_smart_unsafe_shutdowns_total` — Total unsafe shutdowns.
+* `node_disk_smart_media_errors_total` — Total media and data integrity errors.
+* `node_disk_smart_error_log_entries_total` — Total error log entries.
+* `node_disk_smart_warning_temp_time_minutes_total` — Time (minutes) the drive has been above the warning temperature.
+* `node_disk_smart_critical_comp_time_minutes_total` — Time (minutes) the drive has been above the critical temperature.
 
