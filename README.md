@@ -2,6 +2,12 @@
 
 This repo contains a shell script and a `configd` action to collect SMART data from an NVMe drive and expose them to Prometheus via the Node Exporter plugin and textfile collector on an OPNsense router.
 
+## Grafana Dashboard
+
+I've created a Grafana Dashboard for visualizing these Smartctl metrics, it can be found here: https://grafana.com/grafana/dashboards/24771
+
+![Grafana Dashboard Image](grafana_dashboard.png)
+
 ## Required OPNsense Plugins
 
 *   **os-node_exporter** To collect and expose metrics to Prometheus
