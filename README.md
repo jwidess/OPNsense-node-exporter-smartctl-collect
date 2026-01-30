@@ -20,17 +20,19 @@ I've created a Grafana Dashboard for visualizing these Smartctl metrics, it can 
 
 ## Installation
 
-1. **Install the required plugins listed above**
+1. **Grafana, Prometheus, and [opnsense-exporter](https://github.com/AthennaMind/opnsense-exporter) set up** 
 
-2.  **Copy the script**:
-    Upload `smart-metrics.sh` to your OPNsense device, place it in `/usr/local/bin/`, and make it executable with `chmod +x /usr/local/bin/smart-metrics.sh`
+2. **Install the required plugins listed above**
+
+3.  **Copy the script**:
+    Upload or copy-paste `smart-metrics.sh` to your OPNsense device, place it in `/usr/local/bin/`, and make it executable with `chmod +x /usr/local/bin/smart-metrics.sh`
 
     *Note: The script is currently hardcoded for an NVMe drive at `/dev/nvme0`. If your drive is at a different path, edit the `DEVICE` variable in the script.*
 
-3.  **Copy the action configuration**:
-    Upload `actions_smartmetrics.conf` to `/usr/local/opnsense/service/conf/actions.d/`.
+4.  **Copy the action configuration**:
+    Upload or copy-paste `actions_smartmetrics.conf` to `/usr/local/opnsense/service/conf/actions.d/`.
 
-4.  **Reload configd**:
+5.  **Reload configd**:
     To register the new action, restart the config daemon with `service configd restart`
 
 
