@@ -77,3 +77,11 @@ The following metrics are exported and can be found in Prometheus. I use Grafana
 * `node_disk_smart_warning_temp_time_minutes_total` — Time (minutes) the drive has been above the warning temperature.
 * `node_disk_smart_critical_comp_time_minutes_total` — Time (minutes) the drive has been above the critical temperature.
 
+
+## To-Do
+
+1. Add support for SATA drives.
+   1. If you're running a SATA drive, please contribute a sample output to [smartctl-outputs.md](smartctl-outputs.md)
+2. Collect Model and Serial Number?
+3. Collect self test info?
+4. Add param for drive TBW and calculate estimated remaining life?
