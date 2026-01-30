@@ -4,7 +4,7 @@ This repo contains a shell script and a `configd` action to collect SMART data f
 
 ## Grafana Dashboard
 
-I've created a Grafana Dashboard for visualizing these Smartctl metrics, it can be found here: https://grafana.com/grafana/dashboards/24771
+I've created a Grafana Dashboard for visualizing these Smartctl metrics, it can be found here: https://grafana.com/grafana/dashboards/24771 or in this repo as `24771.json`
 
 ![Grafana Dashboard Image](grafana_dashboard.png)
 
