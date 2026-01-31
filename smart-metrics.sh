@@ -1,7 +1,7 @@
 #!/bin/sh
 
-# This script collects SMART metrics from an NVMe drive and outputs them
-# in a format for Prometheus Node Exporter's textfile collector.
+# This script collects SMART metrics from an NVMe drive on an OPNsense router
+# and outputs them in a format for Prometheus Node Exporter's textfile collector.
 # This script should exist at: /usr/local/bin/smart-metrics.sh
 # The os-smart plugin MUST be installed for this to work.
 # https://github.com/jwidess/OPNsense-node-exporter-smartctl-collect
@@ -9,10 +9,16 @@
 # Drive to monitor
 export DEVICE="/dev/nvme0"
 
+# Cron schedule interval in minutes (used by Grafana for Min interval)
+# Update this to match your cron job schedule in the OPNsense web UI
+export SCRAPE_INTERVAL_MINUTES=5
+
 # Target file for Node Exporter to read
 # The os-node_exporter plugin by default uses /var/tmp/node_exporter for textfile metrics
 TEXTFILE_DIR="/var/tmp/node_exporter"
 OUT_FILE="$TEXTFILE_DIR/smart_metrics.prom"
+
+# ===============================================================
 
 mkdir -p "$TEXTFILE_DIR"
 
@@ -22,6 +28,12 @@ import sys, json, os
 
 device_path = os.environ.get("DEVICE", "/dev/nvme0")
 device_name = os.path.basename(device_path)
+scrape_interval = int(os.environ.get("SCRAPE_INTERVAL_MINUTES", 5))
+
+# Output the scrape interval metric
+print("# HELP node_disk_smart_scrape_interval_minutes Cron schedule interval in minutes for SMART metrics collection, update this value to match your cron job schedule in the OPNsense web UI")
+print("# TYPE node_disk_smart_scrape_interval_minutes gauge")
+print(f"node_disk_smart_scrape_interval_minutes {scrape_interval}")
 
 try:
     data = json.load(sys.stdin)

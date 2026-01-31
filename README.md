@@ -24,12 +24,12 @@ I've created a Grafana Dashboard for visualizing these Smartctl metrics, it can 
 
 2. **Install the required plugins listed above**
 
-3.  **Copy the script**:
-    Upload or copy-paste `smart-metrics.sh` to your OPNsense device, place it in `/usr/local/bin/`, and make it executable with `chmod +x /usr/local/bin/smart-metrics.sh`
+3.  **Add the script**:
+    1.  Upload or copy-paste `smart-metrics.sh` to your OPNsense device, place it in `/usr/local/bin/`, and make it executable with `chmod +x /usr/local/bin/smart-metrics.sh`
+    2.  Modify the `DEVICE` variable to match your NVMe drive path if necessary.
+    3.  Modify the `SCRAPE_INTERVAL_MINUTES` variable to match whatever interval you decide to use in Cron.
 
-    *Note: The script is currently hardcoded for an NVMe drive at `/dev/nvme0`. If your drive is at a different path, edit the `DEVICE` variable in the script.*
-
-4.  **Copy the action configuration**:
+4.  **Add the action configuration**:
     Upload or copy-paste `actions_smartmetrics.conf` to `/usr/local/opnsense/service/conf/actions.d/`.
 
 5.  **Reload configd**:
@@ -52,7 +52,7 @@ To collect metrics on a schedule:
 1.  Go to **System > Settings > Cron**.
 2.  Click the **+** button to add a new job.
 3.  **Command**: Select `Collect SMART Metrics for Node Exporter` from the dropdown.
-4.  **Schedule**: Set your interval; I use every 5 minutes. *(You'll need to update the Grafana Rate of Writes panel `interval` to match if you change this to avoid artifacts)*
+4.  **Schedule**: Set your interval; I use every 5 minutes. *(You'll need to update the script SCRAPE_INTERVAL_MINUTES variable to match this interval in minutes)*
 5.  Click **Save**.
 
 ## Exposed Metrics
