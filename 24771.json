@@ -56,7 +56,6 @@
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 0,
-  "id": null,
   "links": [],
   "panels": [
     {
@@ -130,10 +129,14 @@
       "interval": "${scrape_interval}m",
       "options": {
         "legend": {
-          "calcs": [],
-          "displayMode": "hidden",
-          "placement": "right",
-          "showLegend": false
+          "calcs": [
+            "mean",
+            "min",
+            "max"
+          ],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
         },
         "tooltip": {
           "hideZeros": false,
@@ -150,7 +153,7 @@
           },
           "editorMode": "code",
           "expr": "node_disk_smart_temperature_celsius{}",
-          "legendFormat": "__auto",
+          "legendFormat": "Disk Temperature",
           "range": true,
           "refId": "A"
         }
@@ -307,7 +310,11 @@
       "interval": "${scrape_interval}m",
       "options": {
         "legend": {
-          "calcs": [],
+          "calcs": [
+            "mean",
+            "min",
+            "max"
+          ],
           "displayMode": "list",
           "placement": "bottom",
           "showLegend": true
@@ -1437,6 +1444,7 @@
   "timezone": "browser",
   "title": "OPNsense Disk Usage",
   "uid": "ad9mhw8",
-  "version": 6,
-  "weekStart": ""
+  "version": 7,
+  "weekStart": "",
+  "id": null
 }
